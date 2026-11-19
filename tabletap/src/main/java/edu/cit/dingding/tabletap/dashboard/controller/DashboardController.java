@@ -19,24 +19,16 @@ import java.util.UUID;
 public class DashboardController {
     private final UserService userService;
 
-    public DashboardController(UserService userService) {
-        this.userService = userService;
-    }
+    public DashboardController(UserService userService) { this.userService = userService; }
 
     @GetMapping("/diner")
-    public DashboardResponse diner(@AuthenticationPrincipal Jwt jwt) {
-        return response(jwt, Role.DINER);
-    }
+    public DashboardResponse diner(@AuthenticationPrincipal Jwt jwt) { return response(jwt, Role.DINER); }
 
     @GetMapping("/staff")
-    public DashboardResponse staff(@AuthenticationPrincipal Jwt jwt) {
-        return response(jwt, Role.STAFF);
-    }
+    public DashboardResponse staff(@AuthenticationPrincipal Jwt jwt) { return response(jwt, Role.STAFF); }
 
     @GetMapping("/owner")
-    public DashboardResponse owner(@AuthenticationPrincipal Jwt jwt) {
-        return response(jwt, Role.OWNER);
-    }
+    public DashboardResponse owner(@AuthenticationPrincipal Jwt jwt) { return response(jwt, Role.OWNER); }
 
     private DashboardResponse response(Jwt jwt, Role role) {
         var user = userService.findById(UUID.fromString(jwt.getSubject()))

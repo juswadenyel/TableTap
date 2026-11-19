@@ -20,12 +20,15 @@ import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.access.AccessDeniedHandler;
+import org.springframework.http.MediaType;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import edu.cit.dingding.tabletap.auth.service.TokenBlocklist;
-import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.jwt.JwtException;
 
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
@@ -47,11 +50,11 @@ public class SecurityConfig {
 
     @Bean
     public JwtDecoder jwtDecoder(@Value("${app.jwt.secret}") String secret, TokenBlocklist tokenBlocklist) {
-        JwtDecoder delegate = NimbusJwtDecoder.withSecretKey(secretKey(secret))
+        JwtDecoder decoder = NimbusJwtDecoder.withSecretKey(secretKey(secret))
                 .macAlgorithm(MacAlgorithm.HS256)
                 .build();
         return token -> {
-            Jwt jwt = delegate.decode(token);
+            Jwt jwt = decoder.decode(token);
             if (jwt.getId() != null && tokenBlocklist.isRevoked(jwt.getId())) {
                 throw new JwtException("Token has been revoked");
             }
@@ -60,11 +63,9 @@ public class SecurityConfig {
     }
 
     @Bean
-    public CorsConfigurationSource corsConfigurationSource(
-            @Value("${app.cors.allowed-origin:http://localhost:5173}") String allowedOrigin
-    ) {
+    public CorsConfigurationSource corsConfigurationSource(@Value("${app.cors.allowed-origin:http://localhost:5173}") String origin) {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(java.util.List.of(allowedOrigin));
+        configuration.setAllowedOrigins(java.util.List.of(origin));
         configuration.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(java.util.List.of("Authorization", "Content-Type"));
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
@@ -75,7 +76,7 @@ public class SecurityConfig {
     @Bean
     public AuthenticationEntryPoint authenticationEntryPoint() {
         return (request, response, exception) -> {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setStatus(401);
             response.setContentType(MediaType.APPLICATION_JSON_VALUE);
             response.getWriter().write("{\"message\":\"Unauthorized\"}");
         };
@@ -84,7 +85,7 @@ public class SecurityConfig {
     @Bean
     public AccessDeniedHandler accessDeniedHandler() {
         return (request, response, exception) -> {
-            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            response.setStatus(403);
             response.setContentType(MediaType.APPLICATION_JSON_VALUE);
             response.getWriter().write("{\"message\":\"Forbidden\"}");
         };
@@ -108,9 +109,7 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> {})
-                .exceptionHandling(exceptions -> exceptions
-                        .authenticationEntryPoint(authenticationEntryPoint)
-                        .accessDeniedHandler(accessDeniedHandler))
+                .exceptionHandling(exceptions -> exceptions.authenticationEntryPoint(authenticationEntryPoint).accessDeniedHandler(accessDeniedHandler))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(HttpMethod.GET, "/health").permitAll()
@@ -123,8 +122,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/api/tables/**", "/api/floor-plans/**").hasRole("OWNER")
                         .requestMatchers(HttpMethod.GET, "/api/tables/**", "/api/floor-plans/**").authenticated()
                         .anyRequest().authenticated())
-                .oauth2ResourceServer(resourceServer -> resourceServer
-                        .authenticationEntryPoint(authenticationEntryPoint)
+                .oauth2ResourceServer(resourceServer -> resourceServer.authenticationEntryPoint(authenticationEntryPoint)
                         .accessDeniedHandler(accessDeniedHandler)
                         .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter)));
         return http.build();

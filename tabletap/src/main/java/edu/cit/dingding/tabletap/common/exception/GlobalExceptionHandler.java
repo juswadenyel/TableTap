@@ -17,21 +17,18 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> validation(MethodArgumentNotValidException exception) {
         Map<String, String> errors = new LinkedHashMap<>();
-        exception.getBindingResult().getFieldErrors()
-                .forEach(error -> errors.putIfAbsent(error.getField(), error.getDefaultMessage()));
+        exception.getBindingResult().getFieldErrors().forEach(error -> errors.putIfAbsent(error.getField(), error.getDefaultMessage()));
         return ResponseEntity.badRequest().body(new ErrorResponse("Validation failed", errors));
     }
 
     @ExceptionHandler(ResponseStatusException.class)
     public ResponseEntity<ErrorResponse> responseStatus(ResponseStatusException exception) {
-        int status = exception.getStatusCode().value();
-        String message = exception.getReason() == null ? HttpStatus.valueOf(status).getReasonPhrase() : exception.getReason();
-        return ResponseEntity.status(exception.getStatusCode()).body(new ErrorResponse(message, Map.of()));
+        HttpStatus status = HttpStatus.valueOf(exception.getStatusCode().value());
+        return ResponseEntity.status(status).body(new ErrorResponse(exception.getReason() == null ? status.getReasonPhrase() : exception.getReason(), Map.of()));
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> fallback(Exception exception) {
-        return ResponseEntity.internalServerError()
-                .body(new ErrorResponse("Internal server error", Map.of()));
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse("Internal server error", Map.of()));
     }
 }

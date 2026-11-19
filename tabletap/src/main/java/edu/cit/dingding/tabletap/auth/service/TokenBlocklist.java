@@ -15,10 +15,10 @@ public class TokenBlocklist {
     }
 
     public boolean isRevoked(String jti) {
-        Instant expiresAt = revoked.get(jti);
-        if (expiresAt == null) return false;
-        if (!expiresAt.isAfter(Instant.now())) {
-            revoked.remove(jti, expiresAt);
+        Instant expiry = revoked.get(jti);
+        if (expiry == null) return false;
+        if (!expiry.isAfter(Instant.now())) {
+            revoked.remove(jti, expiry);
             return false;
         }
         return true;
