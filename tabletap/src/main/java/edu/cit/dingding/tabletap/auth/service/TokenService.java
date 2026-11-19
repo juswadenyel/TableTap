@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.UUID;
 
 // This service issues signed HS256 tokens for authenticated users.
 @Service
@@ -33,6 +34,7 @@ public class TokenService {
                 .subject(user.getUserId().toString())
                 .claim("email", user.getEmail())
                 .claim("role", user.getRole().name())
+                .id(UUID.randomUUID().toString())
                 .issuedAt(issuedAt)
                 .expiresAt(issuedAt.plus(expirationMinutes, ChronoUnit.MINUTES))
                 .build();

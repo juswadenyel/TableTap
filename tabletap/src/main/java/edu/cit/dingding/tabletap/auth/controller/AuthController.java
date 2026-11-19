@@ -4,6 +4,7 @@ import edu.cit.dingding.tabletap.auth.dto.AuthResponse;
 import edu.cit.dingding.tabletap.auth.dto.LoginRequest;
 import edu.cit.dingding.tabletap.auth.dto.RegisterRequest;
 import edu.cit.dingding.tabletap.auth.service.AuthService;
+import edu.cit.dingding.tabletap.auth.service.TokenBlocklist;
 import edu.cit.dingding.tabletap.user.dto.UserResponse;
 import edu.cit.dingding.tabletap.user.service.UserService;
 import jakarta.validation.Valid;
@@ -27,10 +28,12 @@ public class AuthController {
 
     private final AuthService authService;
     private final UserService userService;
+    private final TokenBlocklist tokenBlocklist;
 
-    public AuthController(AuthService authService, UserService userService) {
+    public AuthController(AuthService authService, UserService userService, TokenBlocklist tokenBlocklist) {
         this.authService = authService;
         this.userService = userService;
+        this.tokenBlocklist = tokenBlocklist;
     }
 
     @PostMapping("/register")
@@ -46,8 +49,8 @@ public class AuthController {
 
     @PostMapping("/logout")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void logout() {
-        // The client must discard its token because the server does not store sessions.
+    public void logout(@AuthenticationPrincipal Jwt jwt) {
+        tokenBlocklist.revoke(jwt.getId(), jwt.getExpiresAt());
     }
 
     @GetMapping("/me")
