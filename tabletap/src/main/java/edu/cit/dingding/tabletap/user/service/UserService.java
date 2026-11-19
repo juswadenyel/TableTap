@@ -51,7 +51,7 @@ public class UserService {
         }
 
         User user = new User();
-        user.setFullName(fullName);
+        user.setFullName(fullName.trim());
         user.setEmail(normalizedEmail);
         user.setPhone(phone);
         user.setPasswordHash(passwordEncoder.encode(rawPassword));
