@@ -9,6 +9,22 @@ app.jwt.secret=<replace-with-a-random-secret-of-at-least-32-characters>
 app.jwt.expiration-minutes=60
 app.cors.allowed-origin=http://localhost:5173
 
+# Password reset links and Gmail SMTP delivery. Use a Google App Password as SMTP_PASSWORD.
+app.frontend-url=http://localhost:5173
+app.reset-token.expiration-minutes=15
+spring.mail.host=${SMTP_HOST:smtp.gmail.com}
+spring.mail.port=587
+spring.mail.username=${SMTP_USERNAME:}
+spring.mail.password=${SMTP_PASSWORD:}
+spring.mail.properties.mail.smtp.auth=true
+spring.mail.properties.mail.smtp.starttls.enable=true
+
+# Set these in the backend process environment; do not commit your Gmail address or App Password.
+# SMTP_HOST=smtp.gmail.com
+# SMTP_PORT=587
+# SMTP_USERNAME=your-account@gmail.com
+# SMTP_PASSWORD=your-16-character-google-app-password
+
 # Optional account seeding
 app.seed.owner-email=<owner-email>
 app.seed.owner-password=<owner-password>

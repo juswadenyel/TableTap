@@ -9,14 +9,16 @@ const client = axios.create({
 
 client.interceptors.request.use((config) => {
   const token = localStorage.getItem(TOKEN_KEY)
-  if (token) config.headers.Authorization = `Bearer ${token}`
+  const publicAuthRequest = /^\/api\/auth\/(login|register|forgot-password|reset-password)(\/|$)/.test(config.url || '')
+  if (token && !publicAuthRequest) config.headers.Authorization = `Bearer ${token}`
   return config
 })
 
 client.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    const publicAuthPath = ['/login', '/forgot-password', '/reset-password'].includes(window.location.pathname)
+    if (error.response?.status === 401 && !publicAuthPath) {
       localStorage.removeItem(TOKEN_KEY)
       if (window.location.pathname !== '/login') window.location.assign('/login')
     }

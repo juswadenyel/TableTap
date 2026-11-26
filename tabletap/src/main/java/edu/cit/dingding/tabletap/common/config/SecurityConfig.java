@@ -15,6 +15,9 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtException;
+import org.springframework.security.oauth2.core.OAuth2Error;
+import org.springframework.security.oauth2.core.OAuth2TokenValidator;
+import org.springframework.security.oauth2.core.OAuth2TokenValidatorResult;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
@@ -50,16 +53,14 @@ public class SecurityConfig {
 
     @Bean
     public JwtDecoder jwtDecoder(@Value("${app.jwt.secret}") String secret, TokenBlocklist tokenBlocklist) {
-        JwtDecoder decoder = NimbusJwtDecoder.withSecretKey(secretKey(secret))
+        NimbusJwtDecoder decoder = NimbusJwtDecoder.withSecretKey(secretKey(secret))
                 .macAlgorithm(MacAlgorithm.HS256)
                 .build();
-        return token -> {
-            Jwt jwt = decoder.decode(token);
-            if (jwt.getId() != null && tokenBlocklist.isRevoked(jwt.getId())) {
-                throw new JwtException("Token has been revoked");
-            }
-            return jwt;
-        };
+        OAuth2TokenValidator<Jwt> revocationValidator = jwt -> jwt.getId() != null && tokenBlocklist.isRevoked(jwt.getId())
+                ? OAuth2TokenValidatorResult.failure(new OAuth2Error("invalid_token", "Token has been revoked", null))
+                : OAuth2TokenValidatorResult.success();
+        decoder.setJwtValidator(revocationValidator);
+        return decoder;
     }
 
     @Bean
@@ -114,6 +115,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(HttpMethod.GET, "/health").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/auth/login").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/auth/forgot-password", "/api/auth/reset-password").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/auth/reset-password/validate").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/dashboard/diner").hasRole("DINER")
                         .requestMatchers(HttpMethod.GET, "/api/dashboard/staff").hasRole("STAFF")
                         .requestMatchers(HttpMethod.GET, "/api/dashboard/owner").hasRole("OWNER")

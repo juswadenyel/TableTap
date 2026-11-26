@@ -1,6 +1,6 @@
 import React from 'react'
 import { useState } from 'react'
-import { Link, Navigate, useNavigate } from 'react-router-dom'
+import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import AuthLayout from '../components/AuthLayout'
 import { dashboardPath } from '../components/ProtectedRoute'
 import { useAuth } from '../context/AuthContext'
@@ -8,6 +8,7 @@ import { useAuth } from '../context/AuthContext'
 export default function LoginPage() {
   const { login, user, ready } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
   const [form, setForm] = useState({ email: '', password: '' })
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
@@ -33,9 +34,11 @@ export default function LoginPage() {
     <AuthLayout title="Welcome back" subtitle="Sign in to continue to your TableTap account."
       footer={<>New to TableTap? <Link to="/register">Create an account</Link></>}>
       <form className="form" onSubmit={handleSubmit}>
+        {location.state?.message && <p className="success-alert" role="status">{location.state.message}</p>}
         {error && <p className="form-alert" role="alert">{error}</p>}
         <label>Email address<input type="email" autoComplete="email" value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} required /></label>
         <label>Password<input type="password" autoComplete="current-password" value={form.password} onChange={(event) => setForm({ ...form, password: event.target.value })} required /></label>
+        <div className="forgot-link"><Link to="/forgot-password">Forgot password?</Link></div>
         <button className="button button-primary button-wide" disabled={busy}>{busy ? 'Signing in…' : 'Sign in'}</button>
       </form>
     </AuthLayout>

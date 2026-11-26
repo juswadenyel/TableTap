@@ -44,6 +44,23 @@ public class UserService {
         return passwordEncoder.matches(rawPassword, user.getPasswordHash());
     }
 
+    public User updateProfile(UUID id, String fullName, String email, String phone) {
+        User user = findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+        String normalizedEmail = normalizeEmail(email);
+        if (userRepository.existsByEmailAndUserIdNot(normalizedEmail, id)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Email is already registered");
+        }
+        user.setFullName(fullName.trim());
+        user.setEmail(normalizedEmail);
+        user.setPhone(phone == null ? "" : phone.trim());
+        return userRepository.save(user);
+    }
+
+    public void updatePassword(User user, String rawPassword) {
+        user.setPasswordHash(passwordEncoder.encode(rawPassword));
+        userRepository.save(user);
+    }
+
     private User create(String fullName, String email, String phone, String rawPassword, Role role) {
         String normalizedEmail = normalizeEmail(email);
         if (userRepository.findByEmail(normalizedEmail).isPresent()) {

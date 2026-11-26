@@ -46,15 +46,16 @@ export function AuthProvider({ children }) {
     return data.user
   }, [saveSession])
 
-  const logout = useCallback(async () => {
+  const logout = useCallback(async (revoke = true) => {
     try {
-      if (localStorage.getItem(TOKEN_KEY)) await client.post('/api/auth/logout')
+      if (revoke && localStorage.getItem(TOKEN_KEY)) await client.post('/api/auth/logout')
     } finally {
       clearSession()
     }
   }, [clearSession])
 
-  const value = useMemo(() => ({ user, token, ready, login, register, logout }), [user, token, ready, login, register, logout])
+  const updateUser = useCallback((nextUser) => setUser(nextUser), [])
+  const value = useMemo(() => ({ user, token, ready, login, register, logout, updateUser }), [user, token, ready, login, register, logout, updateUser])
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 

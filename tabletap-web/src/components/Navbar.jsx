@@ -3,9 +3,9 @@ import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
 const linksByRole = {
-  DINER: [{ label: 'Reserve a Table', path: '/reserve' }, { label: 'My Reservations', path: '/reservations' }],
-  STAFF: [{ label: "Today's Reservations", path: '/today' }, { label: 'Table Status', path: '/table-status' }],
-  OWNER: [{ label: 'Floor Plan', path: '/floor-plan' }, { label: 'Tables', path: '/tables' }, { label: 'Staff', path: '/staff-management' }],
+  DINER: [{ label: 'Reserve a Table', path: '/reserve' }, { label: 'My Reservations', path: '/reservations' }, { label: 'Profile', path: '/profile' }],
+  STAFF: [{ label: "Today's Reservations", path: '/today' }, { label: 'Table Status', path: '/table-status' }, { label: 'Profile', path: '/profile' }],
+  OWNER: [{ label: 'Floor Plan', path: '/floor-plan' }, { label: 'Tables', path: '/tables' }, { label: 'Staff', path: '/staff-management' }, { label: 'Profile', path: '/profile' }],
 }
 
 export default function Navbar() {
